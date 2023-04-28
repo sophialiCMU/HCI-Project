@@ -12,8 +12,8 @@ clock = pygame.time.Clock()
 # it will display on screen
 screen = pygame.display.set_mode([960, 540])
 
-bg1 = pygame.image.load("pgMain.jpg")
-bg3 = pygame.image.load("pg3.jpg")
+bgMain = pygame.image.load("pgMain.jpg")
+bgRegister = pygame.image.load("pgRegister.jpg")
 bgAvatar = pygame.image.load("pgAvatar.jpg")
 bgWhatWeDo = pygame.image.load("pgWhatWeDo.jpg")
 
@@ -138,14 +138,14 @@ input6 = Input("short bio", 600,375,140,32)
 # All the texts
 # def __init__(self, name, textLoc, x, y, txtSize = 32):
 text1 = TextBoxMine("Avatar Name", input1, 1100, 300)
-text2 = TextBoxMine("English", input4, 1300, 440, 15)
+text2 = TextBoxMine("English", input4, 1300, 440, 32)
 text3 = TextBoxMine("Mandarin", input5, 1300, 515, 15)
 text4 = TextBoxMine("Bio", input6, 900, 630, 15)
 
 # All the pages
-pgMain = Page(bg1, [], [], [])
+pgMain = Page(bgMain, [], [], [])
 pgWhatWeDo = Page(bgWhatWeDo, [], [], [])
-pgRegister = Page(bg3, [], [input1, input2, input3, input4, input5, input6])
+pgRegister = Page(bgRegister, [], [input1, input2, input3, input4, input5, input6])
 pgAvatar = Page(bgAvatar, [], [], [text1, text2, text3, text4])
 
 # Button = (self,  name, x, y, h, w, next, color = color_passive)
@@ -153,7 +153,7 @@ pgAvatar = Page(bgAvatar, [], [], [text1, text2, text3, text4])
 registerBtn = Button("aboutUs", 960/2-75,355,170,35, pgRegister)
 whatWeDoBtn = Button("whatWeDo", 960/2-75,355,170,35, pgWhatWeDo)
 avatarBtn = Button("pgAvatar", 300,300,140,32, pgAvatar)
-backToMainBtn = Button("backToMain", 10,10,140,32, pgMain)
+backToMainBtn = Button("backToMain", 10,10,140,32, pgMain, view = True)
 
 pgMain.buttonList = [whatWeDoBtn, backToMainBtn]
 pgWhatWeDo.buttonList = [registerBtn, backToMainBtn]
