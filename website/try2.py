@@ -1,7 +1,8 @@
 # import sys module
 import pygame
 import sys
-
+import os
+from typing import Tuple
 
 # pygame.init() will initialize all
 # imported module
@@ -12,12 +13,26 @@ clock = pygame.time.Clock()
 # it will display on screen
 screen = pygame.display.set_mode([960, 540])
 
-bgMain = pygame.image.load("pgMain.jpg")
-bgRegister = pygame.image.load("pgRegister.jpg")
-bgAvatar = pygame.image.load("pgAvatar.jpg")
-bgWhatWeDo = pygame.image.load("pgWhatWeDo.jpg")
+bgMain = pygame.image.load("bgMain.jpg")
+bgRegister = pygame.image.load("bgRegister.jpg")
+bgAvatar = pygame.image.load("bgAvatar.jpg")
+bgWhatWeDo = pygame.image.load("bgWhatWeDo.jpg")
+bgVirtual1 = pygame.image.load("bgVirtual1.jpg")
+bgVirtual2 = pygame.image.load("bgVirtual2.jpg")
+bgVirtual3 = pygame.image.load("bgVirtual3.jpg")
+girlSpriteImg = pygame.image.load("girl.PNG")
 
 active = False
+
+## For sprites
+worldx = 960
+worldy = 540
+fps = 40
+ani = 4
+BLUE = (25, 25, 200)
+BLACK = (23, 23, 23)
+WHITE = (254, 254, 254)
+ALPHA = (0, 255, 0)
 
 # Stuff
 # basic font for user typed
@@ -119,27 +134,81 @@ class TextBoxMine(object):
 		self.textRect = self.textRender.get_rect()
 		self.textRect.center = (self.x // 2, self.y // 2)
 		
-
 class Page(object):
-	def __init__(self, background, buttonList, inputList, textList = []):
+	def __init__(self, background, buttonList, inputList, textList = [], sprite = None):
 		self.buttonList = buttonList
 		self.inputList = inputList
 		self.textList = textList
+		self.sprite = sprite
 		self.bg = background
+
+class Player(pygame.sprite.Sprite):
+	# https://opensource.com/article/17/12/game-python-moving-player
+	def __init__(self, name, image, x, y):
+		pygame.sprite.Sprite.__init__(self)
+		self.name = name
+		self.movex = 0 # move along X
+		self.movey = 0 # move along Y
+		self.frame = 0 # count frames
+		self.images = [image]
+
+		for i in range(1, 5):
+			img = image
+			img.convert_alpha()  # optimise alpha
+			img.set_colorkey(ALPHA)  # set alpha
+			self.images.append(img)
+			self.image = self.images[0]
+			self.rect = self.image.get_rect()
+	
+	def control(self,x,y):
+		"""
+		control player movement
+		"""
+		self.movex += x
+		self.movey += y
+
+	def reset(self):
+		self.movex = 0
+		self.movey = 0
+
+	def update(self):
+		"""
+		Update sprite position
+		"""
+		self.rect.x = self.rect.x + self.movex
+		self.rect.y = self.rect.y + self.movey
+		# moving left
+		if self.movex < 0:
+				self.frame += 1
+				if self.frame > 3*ani:
+						self.frame = 0
+				self.image = self.images[self.frame//ani]
+
+		# moving right
+		if self.movex > 0:
+				self.frame += 1
+				if self.frame > 3*ani:
+						self.frame = 0
+				self.image = self.images[self.frame//ani]
+
+player = Player("girl sprite", girlSpriteImg, 20, 50)
+player_list = pygame.sprite.Group()
+player_list.add(player)
+steps = 10
 
 # All the inputs
 input1 = Input("name", 140,175,140,32)
 input2 = Input("email", 140,275,140,32)
 input3 = Input("password", 140,375,140,32)
-input4 = Input("native language", 600,175,140,32)
-input5 = Input("acquiring language", 600,275,140,32)
-input6 = Input("short bio", 600,375,140,32)
+input4 = Input("native language", 575,175,140,32)
+input5 = Input("acquiring language", 575,275,140,32)
+input6 = Input("short bio", 575,375,140,32)
 
 # All the texts
 # def __init__(self, name, textLoc, x, y, txtSize = 32):
 text1 = TextBoxMine("Avatar Name", input1, 1100, 300)
-text2 = TextBoxMine("English", input4, 1300, 440, 32)
-text3 = TextBoxMine("Mandarin", input5, 1300, 515, 15)
+text2 = TextBoxMine("English", input4, 1300, 440, 20)
+text3 = TextBoxMine("Mandarin", input5, 1300, 515, 20)
 text4 = TextBoxMine("Bio", input6, 900, 630, 15)
 
 # All the pages
@@ -147,19 +216,27 @@ pgMain = Page(bgMain, [], [], [])
 pgWhatWeDo = Page(bgWhatWeDo, [], [], [])
 pgRegister = Page(bgRegister, [], [input1, input2, input3, input4, input5, input6])
 pgAvatar = Page(bgAvatar, [], [], [text1, text2, text3, text4])
+pgVirtual1 = Page(bgVirtual1, [], [], [], sprite = player_list)
+pgVirtual2 = Page(bgVirtual2, [], [], [], sprite = player_list)
+pgVirtual3 = Page(bgVirtual3, [], [], [], sprite = player_list)
 
 # Button = (self,  name, x, y, h, w, next, color = color_passive)
 # The buttons change pages
-registerBtn = Button("aboutUs", 960/2-75,355,170,35, pgRegister)
+backToMainBtn = Button("backToMain", 10,10,140,30, pgMain, view = True)
 whatWeDoBtn = Button("whatWeDo", 960/2-75,355,170,35, pgWhatWeDo)
-avatarBtn = Button("pgAvatar", 300,300,140,32, pgAvatar)
-backToMainBtn = Button("backToMain", 10,10,140,32, pgMain, view = True)
+registerBtn = Button("aboutUs", 815,487,120,35, pgRegister)
+avatarBtn = Button("pgAvatar", 960/2-130,475,170,35, pgAvatar)
+virtual1Btn = Button("pgVirtual1", 860,475,72,35, pgVirtual1)
+virtual2Btn = Button("pgVirtual2", 595,85,40,90, pgVirtual2)
+virtual3Btn = Button("pgVirtual3", 650,187,78,40, pgVirtual3)
 
 pgMain.buttonList = [whatWeDoBtn, backToMainBtn]
 pgWhatWeDo.buttonList = [registerBtn, backToMainBtn]
 pgRegister.buttonList = [avatarBtn, backToMainBtn]
-pgAvatar.buttonList = [backToMainBtn, backToMainBtn]
-
+pgAvatar.buttonList = [virtual1Btn, backToMainBtn]
+pgVirtual1.buttonList = [avatarBtn, virtual2Btn, backToMainBtn]
+pgVirtual2.buttonList = [avatarBtn, virtual3Btn, backToMainBtn]
+pgVirtual3.buttonList = [avatarBtn, backToMainBtn]
 
 curPg = pgMain
 
@@ -184,6 +261,18 @@ while True:
 					box.active = False
 
 		if event.type == pygame.KEYDOWN:
+			if curPg.sprite != None:
+				pass
+				if event.key == pygame.K_LEFT or event.key == ord('a'):
+					player.control(-steps,0)
+				if event.key == pygame.K_RIGHT or event.key == ord('d'):
+					player.control(steps,0)
+				if event.key == pygame.K_UP or event.key == ord('w'):
+					player.control(0, -steps)
+				if event.key == pygame.K_DOWN or event.key == ord('s'):
+					player.control(0,steps)
+
+			# change text in any active boxes
 			for box in curPg.inputList:
 				if (box.active == True): # make sure the box is active
 					# Check for backspace
@@ -195,7 +284,20 @@ while True:
 					# formation
 					else:
 						box.user_text += event.unicode
-	
+
+		elif event.type == pygame.KEYUP:
+			if curPg.sprite != None:
+				if event.key == pygame.K_LEFT or event.key == ord('a'):
+					player.control(steps,0)
+				if event.key == pygame.K_RIGHT or event.key == ord('d'):
+					player.control(-steps,0)
+				if event.key == pygame.K_UP or event.key == ord('w'):
+					player.control(0,steps)
+				if event.key == pygame.K_DOWN or event.key == ord('s'):
+					player.control(0,-steps)
+		else:
+			player.reset()
+		
 	# it will set background color of screen
 	screen.fill((255, 255, 255))
 
@@ -205,6 +307,8 @@ while True:
 
 	# gameDisplay.blit(bg, (0, 0))
 	screen.blit(curPg.bg, (0,0))
+
+	#### PUT ALL DRAW STUFF AFTER THIS
 
 	# draw rectangle and argument passed which should
 	# be on screen
@@ -240,7 +344,15 @@ while True:
 	for txt in curPg.textList:
 		txt.textUpdate()
 		screen.blit(txt.textRender, txt.textRect)
+
+	if curPg.sprite != None:
+		pass
+		player.update()  # update player position
+		player_list.draw(screen)
+		pygame.display.flip()
+		clock.tick(fps)
 	
+	#### PUT ALL DRAW STUFF BEFORE THIS
 	# display.flip() will update only a portion of the
 	# screen to updated, not full area
 	pygame.display.flip()
